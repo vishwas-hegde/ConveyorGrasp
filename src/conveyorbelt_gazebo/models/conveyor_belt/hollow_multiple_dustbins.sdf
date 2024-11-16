@@ -1,0 +1,243 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="world_with_multiple_dustbins">
+    
+    <!-- Dustbin Model 1 -->
+    <model name="hollow_dustbin_1">
+      <pose>-0.466065 -0.450597 0.259370 0 0 0</pose>
+      <static>true</static>
+      <link name="bin_body">
+        <!-- Bottom plate -->
+        <collision name="bottom_collision">
+          <pose>0 0 -0.25 0 0 0</pose>  <!-- Adjusted Z position for higher box -->
+          <geometry>
+            <box>
+              <size>0.41 0.58 0.01</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="bottom_visual">
+          <pose>0 0 -0.25 0 0 0</pose>  <!-- Adjusted Z position for higher box -->
+          <geometry>
+            <box>
+              <size>0.41 0.58 0.01</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.6 0.6 0.6 1.0</ambient>
+            <diffuse>0.6 0.6 0.6 1.0</diffuse>
+          </material>
+        </visual>
+
+        <!-- Right wall -->
+        <collision name="right_wall_collision">
+          <pose>0.205 0 0 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.01 0.58 0.5</size>  <!-- Increased height from 0.17 to 0.5 -->
+            </box>
+          </geometry>
+        </collision>
+        <visual name="right_wall_visual">
+          <pose>0.205 0 0 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.01 0.58 0.5</size>  <!-- Increased height from 0.17 to 0.5 -->
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.6 0.6 0.6 1.0</ambient>
+            <diffuse>0.6 0.6 0.6 1.0</diffuse>
+          </material>
+        </visual>
+
+        <!-- Left wall -->
+        <collision name="left_wall_collision">
+          <pose>-0.205 0 0 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.01 0.58 0.5</size>  <!-- Increased height from 0.17 to 0.5 -->
+            </box>
+          </geometry>
+        </collision>
+        <visual name="left_wall_visual">
+          <pose>-0.205 0 0 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.01 0.58 0.5</size>  <!-- Increased height from 0.17 to 0.5 -->
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.6 0.6 0.6 1.0</ambient>
+            <diffuse>0.6 0.6 0.6 1.0</diffuse>
+          </material>
+        </visual>
+
+        <!-- Front wall -->
+        <collision name="front_wall_collision">
+          <pose>0 0.29 0 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.41 0.01 0.5</size>  <!-- Increased height from 0.17 to 0.5 -->
+            </box>
+          </geometry>
+        </collision>
+        <visual name="front_wall_visual">
+          <pose>0 0.29 0 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.41 0.01 0.5</size>  <!-- Increased height from 0.17 to 0.5 -->
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.6 0.6 0.6 1.0</ambient>
+            <diffuse>0.6 0.6 0.6 1.0</diffuse>
+          </material>
+        </visual>
+
+        <!-- Back wall -->
+        <collision name="back_wall_collision">
+          <pose>0 -0.29 0 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.41 0.01 0.5</size>  <!-- Increased height from 0.17 to 0.5 -->
+            </box>
+          </geometry>
+        </collision>
+        <visual name="back_wall_visual">
+          <pose>0 -0.29 0 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.41 0.01 0.5</size>  <!-- Increased height from 0.17 to 0.5 -->
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.6 0.6 0.6 1.0</ambient>
+            <diffuse>0.6 0.6 0.6 1.0</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+
+    <!-- Copy the same structure for dustbin_2 and dustbin_3 with their respective poses -->
+
+        <!-- Dustbin Model 1 -->
+    <model name="hollow_dustbin_2">
+      <pose>-0.039282 0.665452 0.270606 0 0 0</pose>
+      <static>true</static>
+      <link name="bin_body">
+        <!-- Bottom plate -->
+        <collision name="bottom_collision">
+          <pose>0 0 -0.25 0 0 0</pose>  <!-- Adjusted Z position for higher box -->
+          <geometry>
+            <box>
+              <size>0.41 0.58 0.01</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="bottom_visual">
+          <pose>0 0 -0.25 0 0 0</pose>  <!-- Adjusted Z position for higher box -->
+          <geometry>
+            <box>
+              <size>0.41 0.58 0.01</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.6 0.6 0.6 1.0</ambient>
+            <diffuse>0.6 0.6 0.6 1.0</diffuse>
+          </material>
+        </visual>
+
+        <!-- Right wall -->
+        <collision name="right_wall_collision">
+          <pose>0.205 0 0 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.01 0.58 0.5</size>  <!-- Increased height from 0.17 to 0.5 -->
+            </box>
+          </geometry>
+        </collision>
+        <visual name="right_wall_visual">
+          <pose>0.205 0 0 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.01 0.58 0.5</size>  <!-- Increased height from 0.17 to 0.5 -->
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.6 0.6 0.6 1.0</ambient>
+            <diffuse>0.6 0.6 0.6 1.0</diffuse>
+          </material>
+        </visual>
+
+        <!-- Left wall -->
+        <collision name="left_wall_collision">
+          <pose>-0.205 0 0 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.01 0.58 0.5</size>  <!-- Increased height from 0.17 to 0.5 -->
+            </box>
+          </geometry>
+        </collision>
+        <visual name="left_wall_visual">
+          <pose>-0.205 0 0 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.01 0.58 0.5</size>  <!-- Increased height from 0.17 to 0.5 -->
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.6 0.6 0.6 1.0</ambient>
+            <diffuse>0.6 0.6 0.6 1.0</diffuse>
+          </material>
+        </visual>
+
+        <!-- Front wall -->
+        <collision name="front_wall_collision">
+          <pose>0 0.29 0 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.41 0.01 0.5</size>  <!-- Increased height from 0.17 to 0.5 -->
+            </box>
+          </geometry>
+        </collision>
+        <visual name="front_wall_visual">
+          <pose>0 0.29 0 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.41 0.01 0.5</size>  <!-- Increased height from 0.17 to 0.5 -->
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.6 0.6 0.6 1.0</ambient>
+            <diffuse>0.6 0.6 0.6 1.0</diffuse>
+          </material>
+        </visual>
+
+        <!-- Back wall -->
+        <collision name="back_wall_collision">
+          <pose>0 -0.29 0 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.41 0.01 0.5</size>  <!-- Increased height from 0.17 to 0.5 -->
+            </box>
+          </geometry>
+        </collision>
+        <visual name="back_wall_visual">
+          <pose>0 -0.29 0 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.41 0.01 0.5</size>  <!-- Increased height from 0.17 to 0.5 -->
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.6 0.6 0.6 1.0</ambient>
+            <diffuse>0.6 0.6 0.6 1.0</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>

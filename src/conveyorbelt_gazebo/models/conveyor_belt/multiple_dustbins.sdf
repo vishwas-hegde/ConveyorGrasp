@@ -1,0 +1,162 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="world_with_multiple_dustbins">
+
+    <!-- Dustbin Model 1 -->
+    <model name="dustbin_1">
+      <pose>-0.466065 -0.450597 0 0 0 0</pose> <!-- Position the first dustbin at (1, 1, 0) -->
+      <static>true</static>
+      <link name="dustbin_body">
+        <collision name="body_collision">
+          <geometry>
+            <cylinder>
+              <radius>0.2</radius>
+              <length>1.0</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name="body_visual">
+          <geometry>
+            <cylinder>
+              <radius>0.2</radius>
+              <length>1.0</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.1 0.1 0.1 1</ambient>
+            <diffuse>0.1 0.1 0.1 1</diffuse>
+          </material>
+        </visual>
+      </link>
+
+      <!-- <link name="dustbin_lid">
+        <pose>0 0 0.45 0 0 0</pose>
+        <collision name="lid_collision">
+          <geometry>
+            <cylinder>
+              <radius>0.3</radius>
+              <length>0.05</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name="lid_visual">
+          <geometry>
+            <cylinder>
+              <radius>0.3</radius>
+              <length>0.05</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.6 0.6 0.6 1</ambient>
+            <diffuse>0.6 0.6 0.6 1</diffuse>
+          </material>
+        </visual>
+      </link> -->
+    </model>
+
+   <model name="dustbin_2">
+      <pose>-0.039282 0.665452 0.004293 0 0 0</pose> <!-- Position the second dustbin at (2.5, 1, 0) -->
+      <static>true</static>
+      <link name="dustbin_body">
+        <collision name="body_collision">
+          <geometry>
+            <cylinder>
+              <radius>0.2</radius>
+              <length>1.0</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name="body_visual">
+          <geometry>
+            <cylinder>
+              <radius>0.2</radius>
+              <length>1.0</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.1 0.1 0.1 1</ambient>
+            <diffuse>0.1 0.1 0.1 1</diffuse>
+          </material>
+        </visual>
+      </link>
+
+
+      <!-- <link name="dustbin_lid">
+        <pose>0 0 0.45 0 0 0</pose>
+        <collision name="lid_collision">
+          <geometry>
+            <cylinder>
+              <radius>0.3</radius>
+              <length>0.05</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name="lid_visual">
+          <geometry>
+            <cylinder>
+              <radius>0.3</radius>
+              <length>0.05</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.6 0.6 0.6 1</ambient>
+            <diffuse>0.6 0.6 0.6 1</diffuse>
+          </material>
+        </visual>
+      </link> -->
+    </model>
+
+    <!-- Dustbin Model 3 -->
+    <model name="dustbin_3">
+      <pose>0.0 0.0 0 0 0 0</pose> <!-- Position the third dustbin at (4, 1, 0) -->
+      <static>true</static>
+      <link name="dustbin_body">
+        <collision name="body_collision">
+          <geometry>
+            <cylinder>
+              <radius>0.3</radius>
+              <length>0.8</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name="body_visual">
+          <geometry>
+            <cylinder>
+              <radius>0.3</radius>
+              <length>0.8</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.1 0.1 0.1 1</ambient>
+            <diffuse>0.1 0.1 0.1 1</diffuse>
+          </material>
+        </visual>
+      </link>
+
+      <link name="dustbin_lid">
+        <pose>0 0 0.45 0 0 0</pose>
+        <collision name="lid_collision">
+          <geometry>
+            <cylinder>
+              <radius>0.3</radius>
+              <length>0.05</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name="lid_visual">
+          <geometry>
+            <cylinder>
+              <radius>0.3</radius>
+              <length>0.05</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.6 0.6 0.6 1</ambient>
+            <diffuse>0.6 0.6 0.6 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>
