@@ -456,7 +456,7 @@ def main(args=None):
     EXISTS = True
     PR_NAME = PARAM_PROGRAM
     # filepath = os.path.join(os.path.expanduser('~'), 'dev_ws', 'src', 'ros2_RobotSimulation', 'ros2_execution', 'programs', PR_NAME + ".txt")
-    filepath = "/home/agbhat/test_ws/src/ros2_execution/programs/cubeirb.txt"
+    filepath = "/home/agbhat/conveyorGrasp_ws/ConveyorGrasp/src/ros2_execution/programs/cubeirb.txt"
     # EXISTS = os.path.exists(filepath)
     if (EXISTS == True):
         print(PR_NAME + " file found! Executing program...")
