@@ -425,17 +425,16 @@
     </link>
 
     <joint name="panda_camera_joint" type="fixed">
-      <origin xyz="0.05 0 0.05" rpy="0 0 0"/>
+      <origin xyz="0.04 0 0.03" rpy="${pi} -1.57 0"/>   <!-- Never mess with this -->
       <parent link="panda_hand"/>
       <child link="panda_camera_link"/>
     </joint>
 
     <joint name="panda_camera_optical_joint" type="fixed">
-      <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <parent link="panda_camera_link"/>
       <child link="panda_camera_optical_link"/>
     </joint>
-
             
     <!-- Add Gazebo plugin for camera link -->
     <gazebo reference="panda_camera_link">
@@ -459,7 +458,7 @@
             <stddev>0.007</stddev>
           </noise>
         </camera>
-        <plugin name="kinect_controller" filename="libgazebo_ros_camera.so">
+        <plugin name="panda_camera_controller" filename="libgazebo_ros_camera.so">
           <baseline>0.2</baseline>
           <alwaysOn>true</alwaysOn>
           <updateRate>30.0</updateRate>
