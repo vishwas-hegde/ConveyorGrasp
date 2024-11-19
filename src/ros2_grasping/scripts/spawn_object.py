@@ -21,9 +21,9 @@ def main():
     parser.add_argument('--name', type=str, default='box', help='Name of the object to spawn.')
     parser.add_argument('--namespace', type=str, default='ros2Grasp', help='ROS namespace to apply to the tf and plugins.')
     parser.add_argument('--ns', type=bool, default=True, help='Whether to enable namespacing')
-    parser.add_argument('--x', type=float, default=0.5, help='the x component of the initial position [meters].')
+    parser.add_argument('--x', type=float, default=0.4, help='the x component of the initial position [meters].')
     parser.add_argument('--y', type=float, default=-0.5, help='the y component of the initial position [meters].')
-    parser.add_argument('--z', type=float, default=1.5, help='the z component of the initial position [meters].')
+    parser.add_argument('--z', type=float, default=0.6, help='the z component of the initial position [meters].')
     
     args, unknown = parser.parse_known_args()
 

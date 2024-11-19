@@ -291,13 +291,20 @@ def generate_launch_description():
         parameters=[robot_description, robot_description_semantic, kinematics_yaml, {"use_sim_time": True}, {"ROB_PARAM": 'panda_arm'}],
     )
 
-    # Attacher = Node(
-    #     name="ATTACHER_action",
-    #     package="ros2_grasping",
-    #     executable="attacher_action.py",
-    #     output="screen",
-    # )
+    Attacher = Node(
+        name="ATTACHER_action",
+        package="ros2_grasping",
+        executable="attacher_action.py",
+        output="screen",
+    )
 
+    # pandarobotmove = Node(
+    #     package="pandarobotmove",  # Replace with the actual package name if different
+    #     executable="pandarobotmove",  # Replace with the actual executable name if different
+    #     name="pandarobotmove",  # Optional: Name for your node
+    #     output="screen",  # Log output to the screen
+    #     parameters=[{"use_sim_time": True}]  # Add parameters if needed
+    # )
 
     hollow_dustbin_model_path = os.path.join(
         get_package_share_directory('conveyorbelt_gazebo'), # Replace with your dustbin package name
@@ -364,6 +371,7 @@ def generate_launch_description():
             # ROS2_CONTROL:
             static_tf,
             robot_state_publisher,
+            Attacher,
             
             # ROS2 Controllers:
             RegisterEventHandler(
@@ -432,6 +440,7 @@ def generate_launch_description():
 
                     ]
                 )
-            )
+            ),
+            # pandarobotmove,
         ]
     )

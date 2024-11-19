@@ -178,6 +178,8 @@ void ROS2ConveyorBeltPluginPrivate::SetConveyorPower(
   if (req->power >= 0 && req->power <= 100) {
     power_ = req->power;
     belt_velocity_ = max_velocity_ * (power_ / 100);
+    // print to console belt velocity
+    // RCLCPP_INFO(ros_node_->get_logger(), "Conveyor power set to %f", belt_velocity_);
     res->success = true;
   }
   else{
