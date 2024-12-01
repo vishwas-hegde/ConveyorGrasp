@@ -1,0 +1,4 @@
+string input  # The string input
+---
+std_msgs/Float32MultiArray grasp  # The float64multiarray output
+
