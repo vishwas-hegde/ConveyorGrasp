@@ -17,13 +17,16 @@ def main():
     # Get input arguments from user
     parser = argparse.ArgumentParser(description='Spawn object into our Gazebo world.')
     parser.add_argument('--package', type=str, default='ros2_grasping', help='Package where URDF/XACRO file is located.')
-    parser.add_argument('--urdf', type=str, default='/home/vishwas/VBM_project/test/src/ros2_RobotSimulation/ros2_grasping/urdf/box.urdf', help='URDF of the object to spawn.')
-    parser.add_argument('--name', type=str, default='box', help='Name of the object to spawn.')
+    parser.add_argument('--urdf', type=str, default='/home/sarthak_m/VBRM/Projects/ConveyorGrasp/src/ros2_grasping/urdf/box.urdf', help='URDF of the object to spawn.')
+    parser.add_argument('--name', type=str, default='can', help='Name of the object to spawn.')
     parser.add_argument('--namespace', type=str, default='ros2Grasp', help='ROS namespace to apply to the tf and plugins.')
     parser.add_argument('--ns', type=bool, default=True, help='Whether to enable namespacing')
-    parser.add_argument('--x', type=float, default=0.4, help='the x component of the initial position [meters].')
+    # parser.add_argument('--x', type=float, default=0.4, help='the x component of the initial position [meters].')
+    # parser.add_argument('--y', type=float, default=-0.5, help='the y component of the initial position [meters].')
+    # parser.add_argument('--z', type=float, default=0.6, help='the z component of the initial position [meters].')
+    parser.add_argument('--x', type=float, default=0.5, help='the x component of the initial position [meters].')
     parser.add_argument('--y', type=float, default=-0.5, help='the y component of the initial position [meters].')
-    parser.add_argument('--z', type=float, default=0.6, help='the z component of the initial position [meters].')
+    parser.add_argument('--z', type=float, default=0.7, help='the z component of the initial position [meters].')
     
     args, unknown = parser.parse_known_args()
 
@@ -44,9 +47,14 @@ def main():
     request = SpawnEntity.Request()
     request.name = args.name
 
-    urdf_file_path = os.path.join(get_package_share_directory(args.package), 'urdf', args.urdf) # It is assumed that the .urdf/.xacro file is located in /urdf folder!
+    # urdf_file_path = os.path.join(get_package_share_directory(args.package), 'urdf', args.urdf) # It is assumed that the .urdf/.xacro file is located in /urdf folder!
+    # print(urdf_file_path)
+    urdf_file_path = "/home/vishwas/Conveyor/src/ros2_grasping/urdf/ycb_assets/004_sugar_box.urdf" 
     xacro_file = xacro.process_file(urdf_file_path)
-    request.xml = xacro_file.toxml() 
+    # request.xml = xacro_file.toxml() 
+    sdf_file_path = '/home/vishwas/Conveyor/src/gazebo_ycb/models/cracker_box/model.sdf'
+    with open(sdf_file_path, 'r') as sdf_file:
+        request.xml = sdf_file.read()
 
     request.initial_pose.position.x = float(args.x)
     request.initial_pose.position.y = float(args.y)

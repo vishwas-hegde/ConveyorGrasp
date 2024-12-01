@@ -35,7 +35,7 @@ endif()
 # ===== LAUNCH ENVIRONMENT ===== #
 install(
   DIRECTORY 
-    urdf 
+    urdf
   DESTINATION 
     share/${PROJECT_NAME}
 )
@@ -53,6 +53,7 @@ install(PROGRAMS
   scripts/attacher_action.py
   scripts/spawn_object.py
   scripts/spawn_boxes.py
+  scripts/spawn_ycb.py
   DESTINATION lib/${PROJECT_NAME} )
 
 ament_package()
