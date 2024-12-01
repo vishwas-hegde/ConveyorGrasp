@@ -7,201 +7,82 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 import cv2
 import numpy as np
-from matplotlib import pyplot as plt
+import json
+from ultralytics import YOLO
+from ament_index_python.packages import get_package_share_directory
+import os
+import yaml
 import tf2_ros
-import tf2_geometry_msgs
-from geometry_msgs.msg import TransformStamped
-from geometry_msgs.msg import PointStamped
 
-class InHandCamNode(Node):
+
+class PandaCamNode(Node):
     def __init__(self):
-        super().__init__('inhand_camera_node')
-        self.publisher = self.create_publisher(String, 'object_center/inhand', 10)
-        self.timer = self.create_timer(0.5, self.detect_and_publish)
-        self.tracked_objects = {}  # Dictionary to track objects with their IDs
+        super().__init__('panda_camera_node')
+
+        # YOLO model setup
+        package_name = 'yolo'
+        ros2_execution_package_share_path = get_package_share_directory(package_name)
+        path = ros2_execution_package_share_path.split('/')
+        index = path.index(package_name)
+        path[index - 1] = "src"
+        yolo_package_path = '/'.join(path[:index + 1])
+        model_path = os.path.join(yolo_package_path, 'model', 'yolo_ycb.pt')
+
+        self.detection_model = YOLO(model_path)
+        folder_path = os.path.join(os.getcwd(), "src", "yolo", "yolo", "yolo_finetune", "ycb_foods")
+        yaml_path = os.path.join(folder_path, "data.yaml")
+        with open(yaml_path, 'r') as file:
+            self.yaml_data = yaml.safe_load(file)
+        self.ycb_names = self.yaml_data['names']
+        self.names = self.detection_model.names
+
+        # Publishers and subscriptions
+        self.json_pub = self.create_publisher(String, "/yolo/prediction/json", 10)
+        self.annotated_frame = None
+        self.timer = self.create_timer(0.1, self.run)
+        self.get_logger().info("YOLO node with JSON publisher is up and running!")
+
+
+        self.publisher = self.create_publisher(String, 'object_center/panda', 10)
+        self.tracked_objects = set()
 
         self.cv_bridge = CvBridge()
-        self.inhand_rgb = None
-        self.inhand_depth = None
+        self.panda_rgb = None
+        self.panda_depth = None
         self.object_world_coords = None
-        self.inhand_rgb_sub = self.create_subscription(Image, '/panda_camera/image_raw', self.inhand_rgb_callback, 10)
-        self.inhand_depth_sub = self.create_subscription(Image, '/panda_camera/depth/image_raw', self.inhand_depth_callback, 10)
-        self.id = 0
+        self.panda_rgb_sub = self.create_subscription(Image, '/panda_camera/image_raw', self.panda_rgb_callback, 10)
+        self.panda_depth_sub = self.create_subscription(Image, '/panda_camera/depth/image_raw', self.panda_depth_callback, 10)
         self.prev_msg = None
-        self.output_image_pub = self.create_publisher(Image, 'inhand_camera_process/output_image', 10)
 
-        # Initialize TF2 buffer and listener
-        self.tf_buffer = tf2_ros.Buffer()
-        self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
+        self.confidence_threshold = 0.75
 
-    def inhand_rgb_callback(self, msg):
-        self.inhand_rgb = self.cv_bridge.imgmsg_to_cv2(msg, 'bgr8')
 
-    def inhand_depth_callback(self, msg):
-        self.inhand_depth = self.cv_bridge.imgmsg_to_cv2(msg, '32FC1')
+    def panda_rgb_callback(self, msg):
+        self.panda_rgb = self.cv_bridge.imgmsg_to_cv2(msg, 'bgr8')
 
-    def detect_and_publish(self):
-        data = self.get_object_center_and_dimensions()
-        if data is None:
-            return
-        world_center, dimensions = data[0], data[1]
-        if world_center is None or dimensions is None:
-            return
-        
-        detected_center = world_center
-        length, breadth, angle = dimensions
-
-        if breadth > 600:
-            return
-
-        message = {
-                "center": detected_center,
-                "length": length,
-                "breadth": breadth,
-                "angle": angle
-            }
-        json_message = String()
-        json_message.data = json.dumps(message)
-        self.publisher.publish(json_message)
-        self.get_logger().info(f'Published from In-Hand Camera: {json_message.data}')
-        
-        
-        # if not self.is_existing_object(detected_center):
-        #     self.id += 1
-        #     self.tracked_objects[self.id] = detected_center
-            
-        #     # Create the JSON message
-        #     message = {
-        #         "id": str(self.id),
-        #         "center": detected_center,
-        #         "length": length,
-        #         "breadth": breadth,
-        #         "angle": angle
-        #     }
-        #     json_message = String()
-        #     json_message.data = json.dumps(message)
-        #     self.publisher.publish(json_message)
-        #     self.get_logger().info(f'Published: {json_message.data}')
-        #     self.prev_msg = message
-        # else:
-        #     if self.prev_msg is not None:
-        #         json_message = String()
-        #         json_message.data = json.dumps(self.prev_msg)
-        #         self.publisher.publish(json_message)
-
+    def panda_depth_callback(self, msg):
+        self.panda_depth = self.cv_bridge.imgmsg_to_cv2(msg, '32FC1')
     
-    def is_existing_object(self, center):
+    def publish_json(self, detections):
         """
-        Check if the detected center matches an existing tracked object.
-        Return True if it matches, False otherwise.
+        Publishes the detections in JSON format.
         """
-        for obj_center in self.tracked_objects.values():
-            if self.calculate_distance(center, obj_center) < 0.1:
-                return True
-        return False
+        json_message = String()
+        json_message.data = json.dumps(detections)
+        self.json_pub.publish(json_message)
+        self.get_logger().info(f"Published JSON: {json_message.data}")
     
     def calculate_distance(self, c1, c2):
         """
         Calculate the Euclidean distance between two centers.
         """
         return ((c1[0] - c2[0]) ** 2 + (c1[1] - c2[1]) ** 2) ** 0.5
-        
-    def segment_cube(self, rgb_image):
-        if rgb_image is not None:
-            # Convert the image to grayscale
-            gray = cv2.cvtColor(rgb_image, cv2.COLOR_BGR2GRAY)
 
-            _, edges = cv2.threshold(gray, 50, 255, cv2.THRESH_BINARY)
 
-            return edges
-
-    def get_object_center_and_dimensions(self):
+    def convert_to_world_coordinates(self, x, y):
         rgb_image = self.inhand_rgb
-        if rgb_image is not None:
-            # Detect edges
-            edges = self.segment_cube(rgb_image)
-            # edges = cv2.cvtColor(rgb_image, cv2.COLOR_BGR2GRAY)
-            if edges is None:
-                return None
-            
-            # Find contours
-            contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            if not contours:
-                return None
-            
-            # Find the largest contour
-            largest_contour = max(contours, key=cv2.contourArea)
-            
-            # Calculate the minimum area bounding rectangle
-            rect = cv2.minAreaRect(largest_contour)
-            (center_x, center_y), (length, breadth), angle = rect
-            
-            # Correct the angle to ensure it is in the range [0, 180)
-            if length < breadth:
-                angle = angle + 90  # Ensure the angle is relative to the longer side
-            
-            # Optionally, visualize
-            # debug_image = rgb_image.copy()
-            # box = cv2.boxPoints(rect)
-            # box = np.int0(box)  # Convert to integer coordinates
-            # cv2.drawContours(debug_image, [box], 0, (0, 255, 0), 2)  # Draw rectangle
-            # cv2.circle(debug_image, (int(center_x), int(center_y)), 5, (255, 0, 0), -1)  # Draw center
-            # # cv2.imshow('Debug View', debug_image)
-            # # cv2.waitKey(1)
-            # plt.imshow(debug_image)
-            # plt.show()
-            # publish debug image
-            # output_image_msg = self.cv_bridge.cv2_to_imgmsg(debug_image, 'bgr8')
-            # self.output_image_pub.publish(output_image_msg)
-            
-            # Convert center to world coordinates
-            self.center = (int(center_x), int(center_y))
-            world_center = self.convert_to_world_coordinates()
-            # print('hi')
-            
-            return [world_center, (length, breadth, angle)]
-
-        return None
-        
-    # def convert_to_world_coordinates(self):
-    #     rgb_image = self.inhand_rgb
-    #     if rgb_image is not None:
-    #         # Get depth value at the center
-    #         depth_value = 0.76
-
-    #         # Intrinsic parameters (update as per your camera)
-    #         self.fx = 554.256  # Focal length in x
-    #         self.fy = 554.256  # Focal length in y
-    #         self.cx = rgb_image.shape[1] // 2  # Image center x-coordinate
-    #         self.cy = rgb_image.shape[0] // 2  # Image center y-coordinate
-
-    #         # Calculate 3D position in the camera frame
-    #         y = -(self.center[0] - self.cx) * depth_value / self.fx
-    #         x = (self.center[1] - self.cy) * depth_value / self.fy
-    #         z = depth_value
-    #         # print("Object Camera Coordinates:", x, y, z)
-
-    #         R_c_w = np.array([[-1, 0, 0],
-    #                       [0, 1, 0],
-    #                       [0, 0, -1]])
-    #         T_c_w = np.array([0.5 , -0.7 , 1.12])
-    #         T_w = np.array([0, 0, 0])
-
-    #         object_coordinates_wrto_camera = [x,y,z]
-    #         camera_coords_wrto_world = R_c_w @ T_w + T_c_w
-    #         object_coords_wrto_world = R_c_w @ (object_coordinates_wrto_camera) + camera_coords_wrto_world
-
-    #         self.object_world_coords = np.array(object_coords_wrto_world)
-    #         # print("camera_coords_wrto_world",camera_coords_wrto_world)
-    #         # print(object_coords_wrto_world)
-    #         # convert to list
-    #         object_coords_wrto_world = object_coords_wrto_world.tolist()
-            
-    #     return object_coords_wrto_world
-    
-    def convert_to_world_coordinates(self):
-        rgb_image = self.inhand_rgb
-        if self.center is not None and rgb_image is not None:
+        center = (x, y)
+        if center is not None and rgb_image is not None:
 
             R_c_w = np.array([[0, 0, 1],
                               [-0.001, 1, 0.001],
@@ -216,10 +97,7 @@ class InHandCamNode(Node):
                 self.get_logger().error(f'TF Lookup Failed: {str(e)}')
                 return None
             
-            # T_c_w = np.array([0.52, -0.03 , 0.5])
             T_c_w = np.array([H_c_w.transform.translation.x, H_c_w.transform.translation.y, H_c_w.transform.translation.z])
-            # print("T_c_w: ", T_c_w)
-
 
             # Get depth value at the center
             depth_value = 0.34 - T_c_w[0] #box is at 34cm in world frame
@@ -232,8 +110,8 @@ class InHandCamNode(Node):
             self.cy = rgb_image.shape[0] // 2  # Image center y-coordinate
 
             # Calculate 3D position in the camera frame
-            y = (self.center[0] - self.cx) * depth_value / self.fx
-            x = (self.center[1] - self.cy) * depth_value / self.fy
+            y = (center[0] - self.cx) * depth_value / self.fx
+            x = (center[1] - self.cy) * depth_value / self.fy
             z = depth_value
             # print("Object Camera Coordinates:", x, y, z)
 
@@ -245,10 +123,74 @@ class InHandCamNode(Node):
             
         return object_coords_wrto_world
     
+    
+    def run(self):
+        if self.panda_rgb is not None:
+            # results = self.detection_model(self.panda_rgb, verbose=False)
+            results = self.detection_model.track(self.panda_rgb, persist=True)
+            
+            if results[0].boxes is None:
+                return
+                
+            boxes = results[0].boxes.xywh.cpu()
+            track_ids = results[0].boxes.id.int().cpu().tolist()
+            confidences = results[0].boxes.conf.cpu().tolist()
+            classes = results[0].boxes.cls.cpu().tolist()
+
+            filtered_boxes = [box for box, conf in zip(boxes, confidences) if conf >= self.confidence_threshold]
+            filtered_ids = [track_id for track_id, conf in zip(track_ids, confidences) if conf >= self.confidence_threshold]
+            filtered_classes = [cls for cls, conf in zip(classes, confidences) if conf >= self.confidence_threshold]
+
+            detections = {"detections": []}  # Initialize JSON structure
+
+            for box, track_id, cls in zip(filtered_boxes, filtered_ids, filtered_classes):
+
+                if track_id is not None and track_id not in self.tracked_objects:
+                    # print(box)
+                    x, y, w, h = map(float, box.tolist())
+                    world_x, world_y, _ = self.convert_to_world_coordinates(x, y)
+                    #get xmin, ymin, xmax, ymax
+                    x_min = int(x - w / 2)
+                    y_min = int(y - h / 2)
+                    x_max = int(x + w / 2)
+                    y_max = int(y + h / 2)
+
+                    world_x_min, world_y_min, _ = self.convert_to_world_coordinates(x_min, y_min)
+                    world_x_max, world_y_max, _ = self.convert_to_world_coordinates(x_max, y_max)
+                    #get world width and height
+                    world_w = abs(world_x_max - world_x_min)
+                    world_h = abs(world_y_max - world_y_min)
+
+
+                    cls = int(cls)
+                    # cls_name = self.names[cls]
+                    detection = {
+                        "id": str(track_id),  # Assign unique ID for each object
+                        "class": cls,
+                        "bbox": [x_min, y_min, x_max, y_max],
+                        "info": {'center':(world_x, world_y), 'width': world_w, 'height': world_h, 'angle': 0},
+                    }
+                    detections["detections"].append(detection)
+                    self.tracked_objects.add(track_id)
+                    self.prev_msg = detections
+
+                else:
+                    if self.prev_msg is not None:
+                        # json_message = String()
+                        # json_message.data = json.dumps(self.prev_msg)
+                        self.publish_json(self.prev_msg)
+
+            # Annotate and display the image
+            annotated_frame = results[0].plot()
+            self.annotated_frame = annotated_frame
+            cv2.imshow('YOLO Live Predictions', annotated_frame)
+            cv2.waitKey(1)
+   
+    
 
 def main(args=None):
     rclpy.init(args=args)
-    node = InHandCamNode()
+    node = PandaCamNode()
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
