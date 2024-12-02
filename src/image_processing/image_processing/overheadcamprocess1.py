@@ -36,9 +36,9 @@ class OverHeadCamNode(Node):
         self.names = self.detection_model.names
 
         # Publishers and subscriptions
-        self.json_pub = self.create_publisher(String, "/yolo/overhead", 10)
+        self.json_pub = self.create_publisher(String, "/yolo/prediction/json", 10)
         self.annotated_frame = None
-        self.timer = self.create_timer(0.5, self.run)
+        self.timer = self.create_timer(0.1, self.run)
         self.get_logger().info("YOLO node with JSON publisher is up and running!")
 
 
@@ -120,12 +120,8 @@ class OverHeadCamNode(Node):
         if self.overhead_rgb is not None:
             # results = self.detection_model(self.overhead_rgb, verbose=False)
             results = self.detection_model.track(self.overhead_rgb, persist=True)
-            
-            if results[0].boxes is None or len(results[0].boxes) == 0:
-                return
-            if results[0].boxes.id is None:
-                return
-                
+            print("Results: ")
+
             boxes = results[0].boxes.xywh.cpu()
             track_ids = results[0].boxes.id.int().cpu().tolist()
             confidences = results[0].boxes.conf.cpu().tolist()
@@ -139,7 +135,7 @@ class OverHeadCamNode(Node):
 
             for box, track_id, cls in zip(filtered_boxes, filtered_ids, filtered_classes):
 
-                if track_id is not None and track_id not in self.tracked_objects:
+                if track_id not in self.tracked_objects:
                     # print(box)
                     x, y, w, h = map(float, box.tolist())
                     world_x, world_y, _ = self.convert_to_world_coordinates(x, y)
@@ -177,8 +173,8 @@ class OverHeadCamNode(Node):
             # Annotate and display the image
             annotated_frame = results[0].plot()
             self.annotated_frame = annotated_frame
-            # cv2.imshow('YOLO Live Predictions', annotated_frame)
-            # cv2.waitKey(1)
+            cv2.imshow('YOLO Live Predictions', annotated_frame)
+            cv2.waitKey(1)
 
 def main(args=None):
     rclpy.init(args=args)

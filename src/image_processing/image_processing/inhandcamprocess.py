@@ -37,9 +37,9 @@ class PandaCamNode(Node):
         self.names = self.detection_model.names
 
         # Publishers and subscriptions
-        self.json_pub = self.create_publisher(String, "/yolo/prediction/json", 10)
+        self.json_pub = self.create_publisher(String, "/yolo/inhand", 10)
         self.annotated_frame = None
-        self.timer = self.create_timer(0.1, self.run)
+        self.timer = self.create_timer(0.5, self.run)
         self.get_logger().info("YOLO node with JSON publisher is up and running!")
 
 
@@ -55,6 +55,10 @@ class PandaCamNode(Node):
         self.prev_msg = None
 
         self.confidence_threshold = 0.75
+
+        # Initialize TF2 buffer and listener
+        self.tf_buffer = tf2_ros.Buffer()
+        self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
 
 
     def panda_rgb_callback(self, msg):
@@ -80,7 +84,7 @@ class PandaCamNode(Node):
 
 
     def convert_to_world_coordinates(self, x, y):
-        rgb_image = self.inhand_rgb
+        rgb_image = self.panda_rgb
         center = (x, y)
         if center is not None and rgb_image is not None:
 
@@ -129,9 +133,10 @@ class PandaCamNode(Node):
             # results = self.detection_model(self.panda_rgb, verbose=False)
             results = self.detection_model.track(self.panda_rgb, persist=True)
             
-            if results[0].boxes is None:
+            if results[0].boxes is None or len(results[0].boxes) == 0:
                 return
-                
+            if results[0].boxes.id is None:
+                return
             boxes = results[0].boxes.xywh.cpu()
             track_ids = results[0].boxes.id.int().cpu().tolist()
             confidences = results[0].boxes.conf.cpu().tolist()
@@ -183,8 +188,8 @@ class PandaCamNode(Node):
             # Annotate and display the image
             annotated_frame = results[0].plot()
             self.annotated_frame = annotated_frame
-            cv2.imshow('YOLO Live Predictions', annotated_frame)
-            cv2.waitKey(1)
+            # cv2.imshow('YOLO Live Predictions', annotated_frame)
+            # cv2.waitKey(1)
    
     
 
