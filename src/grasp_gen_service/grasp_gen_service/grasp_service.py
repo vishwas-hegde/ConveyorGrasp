@@ -13,6 +13,7 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 import matplotlib.pyplot as plt
 from std_msgs.msg import Float32MultiArray, Float64MultiArray
+import json
 
 class GenerativeGraspService(Node):
     def __init__(self):
@@ -22,14 +23,14 @@ class GenerativeGraspService(Node):
         # Subscriber to rgb image
         self.image_subscriber = self.create_subscription(
             Image,
-            '/panda_camera/image_raw',             # get the rgb image from realsense camera
+            '/realsense/image_raw',             # get the rgb image from realsense camera
             self.rgb_listener_callback,
             10)
         
         # Subscriber to depth image
         self.depth_subscriber = self.create_subscription(
             Image,
-            '/panda_camera/depth/image_raw',        # get the depth image from realsense camera
+            '/realsense/depth/image_raw',        # get the depth image from realsense camera
             self.depth_listener_callback,
             10) 
         
@@ -53,37 +54,13 @@ class GenerativeGraspService(Node):
         """
         Callback function for grasp generation service
         """
-
-        if request.input == "generate_grasp_grconvnet":
-            plt.imshow(self.depth_image)
-            plt.show()
-            gs, depth_img_processed, gs_copy = self.grconvnet.process_data(self.rgb_image, self.depth_image)   # Process data using GRConvNet
-            gs = Float32MultiArray(data=gs)
-            self.get_logger().info('Grasp generated')
-            response.grasp = gs
-            self.grasp_rectangle_publisher.publish(gs)     # Publish grasp rectangle
-            self.depth_image_processed_publisher.publish(self.br.cv2_to_imgmsg(depth_img_processed))   # Publish processed depth image
-
-            # self.plot_grasp(gs_copy)    # Plot the grasp rectangle on the original image
-
-            # plt.imshow(depth_img_processed)
-            # plt.show()
-
-        elif request.input == "generate_grasp_ggcnn":
-            gs, depth_img_processed, gs_copy = self.ggcnn.process_data(self.rgb_image, self.depth_image)        # Process data using GGCNN
-            gs = Float32MultiArray(data=gs)
-            self.get_logger().info('Grasp generated')
-            response.grasp = gs
-            self.grasp_rectangle_publisher.publish(gs)    # Publish grasp rectangle
-            self.depth_image_processed_publisher.publish(self.br.cv2_to_imgmsg(depth_img_processed))    # Publish processed depth image
-
-            # self.plot_grasp(gs_copy)    # Plot the grasp rectangle on the original image
-
-            # plt.imshow(depth_img_processed)
-            # plt.show()
-
-        elif request.input == "generate_grasp_ggcnn2":
-            gs, depth_img_processed, gs_copy = self.ggcnn2.process_data(self.rgb_image, self.depth_image)   # Process data using GGCNN2
+        data = request.input
+        # convert json string to dictionary
+        data = json.loads(data)
+        grasp_type = data['grasp_type']
+        crop = data['crop']
+        if grasp_type == "generate_grasp_grconvnet":
+            gs, depth_img_processed, gs_copy = self.grconvnet.process_data(self.rgb_image, self.depth_image, crop)   # Process data using GRConvNet
             gs = Float32MultiArray(data=gs)
             self.get_logger().info('Grasp generated')
             response.grasp = gs
@@ -91,6 +68,32 @@ class GenerativeGraspService(Node):
             self.depth_image_processed_publisher.publish(self.br.cv2_to_imgmsg(depth_img_processed))   # Publish processed depth image
 
             self.plot_grasp(gs_copy)    # Plot the grasp rectangle on the original image
+
+            # plt.imshow(depth_img_processed)
+            # plt.show()
+
+        # elif request.input == "generate_grasp_ggcnn":
+        #     gs, depth_img_processed, gs_copy = self.ggcnn.process_data(self.rgb_image, self.depth_image)        # Process data using GGCNN
+        #     gs = Float32MultiArray(data=gs)
+        #     self.get_logger().info('Grasp generated')
+        #     response.grasp = gs
+        #     self.grasp_rectangle_publisher.publish(gs)    # Publish grasp rectangle
+        #     self.depth_image_processed_publisher.publish(self.br.cv2_to_imgmsg(depth_img_processed))    # Publish processed depth image
+
+        #     # self.plot_grasp(gs_copy)    # Plot the grasp rectangle on the original image
+
+        #     # plt.imshow(depth_img_processed)
+        #     # plt.show()
+
+        # elif request.input == "generate_grasp_ggcnn2":
+        #     gs, depth_img_processed, gs_copy = self.ggcnn2.process_data(self.rgb_image, self.depth_image)   # Process data using GGCNN2
+        #     gs = Float32MultiArray(data=gs)
+        #     self.get_logger().info('Grasp generated')
+        #     response.grasp = gs
+        #     self.grasp_rectangle_publisher.publish(gs)     # Publish grasp rectangle
+        #     self.depth_image_processed_publisher.publish(self.br.cv2_to_imgmsg(depth_img_processed))   # Publish processed depth image
+
+        #     self.plot_grasp(gs_copy)    # Plot the grasp rectangle on the original image
         
         else:
             self.get_logger().info('Invalid input')

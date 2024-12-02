@@ -37,7 +37,7 @@ class GRConvNet_Grasp():
 
         return img[y1:y2, x1:x2]
 
-    def process_data(self, rgb_img, depth_img):
+    def process_data(self, rgb_img, depth_img, crop):
         """
         Process the input data using GRConvNet
         Input:
@@ -55,13 +55,30 @@ class GRConvNet_Grasp():
         # rgb_img = cv2.resize(rgb_img, (224, 224))
         # depth_img = cv2.resize(depth_img, (224, 224))
 
+        # crop from 150 to 330 in y-axis and 100 to 250 in x-axis
+        # rgb_img = rgb_img[150:330, 100:250]
+        # depth_img = depth_img[150:330, 100:250]
+
+        # crop the image
+        xmin, ymin, xmax, ymax = crop[0], crop[1], crop[2], crop[3]
+
+        #pad 40 pixels on all sides
+        xmin = max(0, xmin - 40)
+        ymin = max(0, ymin - 40)
+        xmax = min(640, xmax + 10)
+        ymax = min(480, ymax + 40)
+
+        rgb_img = rgb_img[ymin:ymax, xmin:xmax]
+        depth_img = depth_img[ymin:ymax, xmin:xmax]
+
         # Process the depth image to remove NaN values
         depth_img = self.process_depth_image(depth_img)
 
         # rgb_img = cv2.resize(rgb_img, (224, 224))
         originalrbg = rgb_img.copy()              # Save the original rgb image
         originaldepth = depth_img.copy()          # Save the original depth image
-
+        print(rgb_img.shape)
+        print(depth_img.shape)
         # normalize rgb image
         rgb_img = rgb_img.astype(np.float32) / 255.0
         rgb_img -= rgb_img.mean()
@@ -100,6 +117,19 @@ class GRConvNet_Grasp():
         width = round(gs[0].width, 5)
         height = round(gs[0].length, 5)
         angle = round(gs[0].angle, 5)
+
+        ax = plt.subplot(111)
+        ax.imshow(originalrbg)
+        for g in gs:
+            print(g.center)
+            print(g.angle)
+            print(g.length)
+            print(g.width)
+
+            g.plot(ax)
+        ax.set_title('Grasp')
+        ax.axis('off')
+        plt.show()
 
         return [center_x, center_y, width, height, angle], originaldepth, gs
     
