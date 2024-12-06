@@ -111,7 +111,11 @@ class GenerativeGraspService(Node):
                 self.grasp_rectangle_publisher.publish(gs)     
                 self.depth_image_processed_publisher.publish(self.br.cv2_to_imgmsg(depth_img_processed)) 
                 closest_grasp=self.plot_grasp(gs, self.latest_detections)  
-                response.grasp = closest_grasp  
+                if closest_grasp is not None:
+                    closest_grasp_flat = list(closest_grasp)
+                    response.grasp = Float32MultiArray(data=closest_grasp_flat)
+                else:
+                    response.grasp = Float32MultiArray(data=[0, 0, 0, 0, 0])  
             
             else:
                 self.get_logger().info('Invalid input')
