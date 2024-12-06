@@ -420,23 +420,97 @@ class Grasp:
             self.center[1] * scale, self.center[0] * scale, -1 * self.angle * 180 / np.pi, self.length * scale,
             self.width * scale)
 
+"""Their code - """
+# def detect_grasps(q_img, ang_img, width_img=None, no_grasps=5):
+#     """
+#     Detect grasps in a network output.
+#     :param q_img: Q image network output
+#     :param ang_img: Angle image network output
+#     :param width_img: (optional) Width image network output
+#     :param no_grasps: Max number of grasps to return
+#     :return: list of Grasps
+#     """
+#     local_max = peak_local_max(q_img, min_distance=20, threshold_abs=0.2, num_peaks=no_grasps)
+#     # plt.imshow(q_img, cmap='gray')
+#     # plt.show()
+#     # plt.imshow(ang_img, cmap='gray')
+#     # plt.show()
+#     # plt.imshow(width_img, cmap='gray')
+#     # plt.show()
+#     grasps = []
+#     for grasp_point_array in local_max:
+#         grasp_point = tuple(grasp_point_array)
+#         print("Grasp Point: ", grasp_point)
+#         plt.imshow(q_img, cmap='gray')  # Display the quality image
+#         plt.scatter(grasp_point[1], grasp_point[0], c='red', s=50, label='Grasp Point')  # Plot the grasp point
+#         plt.legend()
+#         plt.title('Grasp Point on q_img')
+#         plt.show()
+#         grasp_angle = ang_img[grasp_point]
 
-def detect_grasps(q_img, ang_img, width_img=None, no_grasps=1):
-    """
-    Detect grasps in a network output.
-    :param q_img: Q image network output
-    :param ang_img: Angle image network output
-    :param width_img: (optional) Width image network output
-    :param no_grasps: Max number of grasps to return
-    :return: list of Grasps
-    """
-    local_max = peak_local_max(q_img, min_distance=20, threshold_abs=0.2, num_peaks=no_grasps)
+#         g = Grasp(grasp_point, grasp_angle)
+#         if width_img is not None:
+#             g.length = width_img[grasp_point]
+#             g.width = g.length / 2
 
+#         grasps.append(g)
+
+#     return grasps
+
+
+"""Filler"""
+
+# First try ################################################
+
+"""from sklearn.cluster import DBSCAN
+
+def cluster_grasp_points(q_img, points, eps=10, min_samples=1):
+    clustering = DBSCAN(eps=eps, min_samples=min_samples).fit(points)
+    clustered_points = []
+    for cluster_id in np.unique(clustering.labels_):
+        cluster = points[clustering.labels_ == cluster_id]
+        clustered_points.append(cluster[np.argmax(q_img[tuple(zip(*cluster))])])
+    return np.array(clustered_points)
+from scipy.ndimage import maximum_filter
+
+def non_max_suppression(q_img, size=3):
+    max_filter = maximum_filter(q_img, size=size)
+    return (q_img == max_filter) & (q_img > 0.2)
+
+
+def angle_confidence(ang_img, grasp_point, window=5):
+    y, x = grasp_point
+    region = ang_img[y-window:y+window+1, x-window:x+window+1]
+    return np.std(region)  # Lower standard deviation means higher confidence
+
+
+def detect_grasps(q_img, ang_img, width_img=None, no_grasps=5):
+
+    # Detect grasps in a network output with enhanced quality metrics.
+    # :param q_img: Q image network output
+    # :param ang_img: Angle image network output
+    # :param width_img: Width image network output
+    # :param no_grasps: Max number of grasps to return
+    # :return: list of Grasps
+
+    nms_mask = non_max_suppression(q_img, size=20)
+    local_max = np.argwhere(nms_mask)
+    
+    local_max = cluster_grasp_points(q_img, local_max)
+    
     grasps = []
     for grasp_point_array in local_max:
         grasp_point = tuple(grasp_point_array)
-
+        print("Grasp Point: ", grasp_point)
+        plt.imshow(q_img, cmap='gray')  # Display the quality image
+        plt.scatter(grasp_point[1], grasp_point[0], c='red', s=50, label='Grasp Point')  # Plot the grasp point
+        plt.legend()
+        plt.title('Grasp Point on q_img')
+        plt.show()
+        
         grasp_angle = ang_img[grasp_point]
+        if angle_confidence(ang_img, grasp_point) > 0.5:  # Define a confidence threshold
+            continue
 
         g = Grasp(grasp_point, grasp_angle)
         if width_img is not None:
@@ -445,4 +519,74 @@ def detect_grasps(q_img, ang_img, width_img=None, no_grasps=1):
 
         grasps.append(g)
 
-    return grasps
+    return grasps[:no_grasps]"""
+
+##########################   Second try  ####################################
+
+
+from sklearn.cluster import DBSCAN
+from scipy.ndimage import maximum_filter, gaussian_filter
+
+def cluster_grasp_points(q_img, points, eps=10, min_samples=1):
+    """Enhanced clustering but keeps same interface"""
+    clustering = DBSCAN(eps=eps, min_samples=min_samples).fit(points)
+    clustered_points = []
+    for cluster_id in np.unique(clustering.labels_):
+        if cluster_id == -1:  
+            continue
+        cluster = points[clustering.labels_ == cluster_id]
+        quality_scores = q_img[tuple(zip(*cluster))]
+        best_point = cluster[np.argmax(quality_scores)]
+        clustered_points.append(best_point)
+    return np.array(clustered_points)
+
+def non_max_suppression(q_img, size=3):
+    """Enhanced NMS with smoothing but keeps same interface"""
+    smoothed = gaussian_filter(q_img, sigma=1.0)
+    max_filter = maximum_filter(smoothed, size=size)
+    return (smoothed == max_filter) & (smoothed > 0.2)
+
+def angle_confidence(ang_img, grasp_point, window=5):
+    """Improved angle confidence calculation"""
+    y, x = grasp_point
+    h, w = ang_img.shape
+
+    y_start = max(0, y - window)
+    y_end = min(h, y + window + 1)
+    x_start = max(0, x - window)
+    x_end = min(w, x + window + 1)
+    
+    region = ang_img[y_start:y_end, x_start:x_end]
+    
+    center_dist = np.exp(-((np.indices((y_end-y_start, x_end-x_start)) - 
+                           np.array([(y_end-y_start)//2, (x_end-x_start)//2])[:, None, None])**2).sum(0)/8)
+    weighted_std = np.sqrt(np.average((region - region.mean())**2, weights=center_dist))
+    return weighted_std
+
+def detect_grasps(q_img, ang_img, width_img=None, no_grasps=5):
+    """Detect grasps with improved quality but same interface"""
+    nms_mask = non_max_suppression(q_img, size=20)
+    local_max = np.argwhere(nms_mask)
+
+    local_max = cluster_grasp_points(q_img, local_max)
+    
+    grasps = []
+    for grasp_point_array in local_max:
+        grasp_point = tuple(grasp_point_array)
+
+        grasp_angle = ang_img[grasp_point]
+        conf = angle_confidence(ang_img, grasp_point)
+        
+        if conf > 0.5:  
+            continue
+
+        g = Grasp(grasp_point, grasp_angle)
+        if width_img is not None:
+            g.length = width_img[grasp_point]
+            g.width = g.length / 2
+
+        g.quality = q_img[grasp_point]
+        grasps.append(g)
+    
+    grasps.sort(key=lambda g: q_img[g.center], reverse=True)
+    return grasps[:no_grasps]
