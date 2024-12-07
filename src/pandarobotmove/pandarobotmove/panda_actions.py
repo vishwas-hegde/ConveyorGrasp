@@ -48,7 +48,7 @@ class CloseLoopRobot(Node):
         self.MoveXYZW_CLIENT = MoveXYZWclient()
         self.MoveXYZ_CLIENT = MoveXYZclient()
 
-        # self.grasp_client = GraspClient()
+        self.grasp_client = GraspClient()
 
         self.nodeLOG = rclpy.create_node('node_LOG')
 
@@ -211,7 +211,7 @@ class CloseLoopRobot(Node):
             # print("")
             # print("STEP NUMBER " + str(i) + " -> GripperClose (MoveG).")
 
-            GP = 0.02
+            GP = 0.012
             self.MoveG_CLIENT.send_goal(GP)
             
             while rclpy.ok():
@@ -235,6 +235,10 @@ class CloseLoopRobot(Node):
 
             # Extract grasp type from the message
             grasp_type = trigger['value']['grasp_type']
+            grasp_dict = {'grasp_type':'generate_grasp_grconvnet'}
+
+            # convert to json string
+            grasp_type = json.dumps(grasp_dict)
 
             # Create an instance of GraspClient
             

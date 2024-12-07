@@ -231,17 +231,13 @@ class RobotControlNode(Node):
         object_data = {}
         object_id = -1
 
-        # conveyorpower = ConveyorPowerClient()
+        conveyorpower = ConveyorPowerClient()
         # provide power 3.0 to the conveyor belt
-        # conveyorpower.send_request(3.0)
+        conveyorpower.send_request(3.0)
 
-        # conveyorpower.destroy_node()
+        conveyorpower.destroy_node()
 
         while True:
-
-            # gs = node.control(generate_grasp)
-            # print(f"Recieved to loop")
-            # print(f"Grasp rectangle: {gs}")
             # continue
             conveyorpower = ConveyorPowerClient()
             # provide power 3.0 to the conveyor belt
@@ -263,7 +259,6 @@ class RobotControlNode(Node):
                 time.sleep(1)
                 continue
             # print(len(object_queue))
-            gs = node.control(generate_grasp)
             object = object_queue.popleft()
             # Add to completed list
             COMPLETED.append(object['id'])
@@ -273,10 +268,9 @@ class RobotControlNode(Node):
             # time.sleep(5)
             print("STEP 3 Moved to object center")
             
-            # 4. Pose Correction from In-hand camera
+            # 4. Generate Grasp from In-hand camera
             # grasp_rectangle = node.control(generate_grasp)
             # Get object data from in-hand camera
-            x_center, y_center = gs[0], gs[1]
             while rclpy.ok():
                 inhandcamnode = InHandCamSub()
                 rclpy.spin_once(inhandcamnode)
