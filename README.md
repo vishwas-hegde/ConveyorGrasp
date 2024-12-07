@@ -13,8 +13,10 @@ ros2 run image_processing overhead_cam_process
 To run grasp service:
 ros2 run grasp_gen_service grasp_gen_service 
 
-To get the grasp:
-ros2 service call /generate_grasp grasp_gen_interface/srv/GraspGen "{input: '{\"grasp_type\": \"generate_grasp_grconvnet\", \"crop\": [230, 191, 391, 262]}'}" 
+### To get the grasp:
+```bash
+ros2 service call /generate_grasp grasp_gen_interface/srv/GraspGen "{input: '{\"grasp_type\": \"generate_grasp_grconvnet\", \"crop\": [230, 191, 391, 262]}'}"
+
 
 
 
