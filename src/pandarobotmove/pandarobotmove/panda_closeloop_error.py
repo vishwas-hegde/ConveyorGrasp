@@ -291,7 +291,7 @@ class RobotControlNode(Node):
                     center = object_data['info']['center']
                     print("HI")
                     print(center)
-                    if -0.02 - center[1] > 0.01:
+                    if 0.05 - center[1] > 0.01:
                         continue
                     conveyorpower = ConveyorPowerClient()
                     # provide power 0.0 to the conveyor belt
@@ -310,7 +310,7 @@ class RobotControlNode(Node):
             # print(edge_data)
             edge_data_node.destroy_node()
             # print(float(edge_data['angle']))
-            anlge = float(edge_data['angle']) + 45.0
+            anlge = float(edge_data['angle'])
             # print(float(edge_data['center'][0]))
             action_format['value']['positionx'] = center[0]
             # action_format['value']['positionx'] = float(edge_data['center'][0])
