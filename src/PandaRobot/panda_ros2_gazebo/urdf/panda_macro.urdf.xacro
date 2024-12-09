@@ -425,7 +425,7 @@
     </link>
 
     <joint name="panda_camera_joint" type="fixed">
-      <origin xyz="0.04 0 0.03" rpy="${pi} -1.57 0"/>   <!-- Never mess with this -->
+      <origin xyz="0.04 0 0.04" rpy="-1.57 -1.57 0"/>   <!-- Never mess with this -->
       <parent link="panda_hand"/>
       <child link="panda_camera_link"/>
     </joint>
@@ -449,7 +449,7 @@
             <format>B8G8R8</format>
           </image>
           <clip>
-            <near>0.05</near>
+            <near>0.01</near>
             <far>3.0</far>
           </clip>
           <noise>
@@ -460,24 +460,30 @@
         </camera>
         <plugin name="panda_camera_controller" filename="libgazebo_ros_camera.so">
           <baseline>0.2</baseline>
-          <alwaysOn>true</alwaysOn>
-          <updateRate>30.0</updateRate>
-          <cameraName>panda_camera</cameraName>
-          <frameName>panda_camera_optical_link</frameName>
-          <imageTopicName>rgb/image_raw</imageTopicName>
-          <depthImageTopicName>depth/image_raw</depthImageTopicName>
-          <pointCloudTopicName>depth/points</pointCloudTopicName>
-          <cameraInfoTopicName>rgb/camera_info</cameraInfoTopicName>
-          <depthImageCameraInfoTopicName>depth/camera_info</depthImageCameraInfoTopicName>
-          <pointCloudCutoff>0.5</pointCloudCutoff>
-          <hackBaseline>0.07</hackBaseline>
-          <distortionK1>0.0</distortionK1>
-          <distortionK2>0.0</distortionK2>
-          <distortionK3>0.0</distortionK3>
-          <distortionT1>0.0</distortionT1>
-          <distortionT2>0.0</distortionT2>
-        </plugin>
-      </sensor>
+	  <alwaysOn>true</alwaysOn>
+	  <updateRate>0.0</updateRate>
+	  <cameraName>/panda_camera</cameraName>
+	  <imageTopicName>/panda_camera/color/image_raw</imageTopicName>
+	  <cameraInfoTopicName>/panda_camera/color/camera_info</cameraInfoTopicName>
+	  <depthImageTopicName>/panda_camera/depth/image_raw</depthImageTopicName>
+	  <depthImageInfoTopicName>/panda_camera/depth/camera_info</depthImageInfoTopicName>
+	  <pointCloudTopicName>/panda_camera/depth/points</pointCloudTopicName>
+	  <frameName>panda_camera_optical_link</frameName>
+	  <pointCloudCutoff>0.1</pointCloudCutoff>
+	  <pointCloudCutoffMax>3</pointCloudCutoffMax>
+	  <distortionK1>0</distortionK1>
+	  <distortionK2>0</distortionK2>
+	  <distortionK3>0</distortionK3>
+	  <distortionT1>0</distortionT1>
+	  <distortionT2>0</distortionT2>
+	  <CxPrime>0</CxPrime>
+	  <Cx>0</Cx>
+	  <Cy>0</Cy>
+	  <focalLength>0</focalLength>
+	  <hackBaseline>0</hackBaseline>
+	</plugin>
+        </sensor>
+        <static>false</static>           
     </gazebo>
 
 

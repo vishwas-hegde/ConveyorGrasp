@@ -62,7 +62,6 @@ def generate_launch_description():
     # End-Effector:
     print("End-effector")
     EE_no = "true"
-    
 
     # ***** ROBOT DESCRIPTION ***** #
     # PANDA ROBOT Description file package:
@@ -305,6 +304,21 @@ def generate_launch_description():
     #     output="screen",  # Log output to the screen
     #     parameters=[{"use_sim_time": True}]  # Add parameters if needed
     # )
+    overheadcampub = Node(
+        package="image_processing",  # Replace with the actual package name if different
+        executable="overhead_cam_process",  # Replace with the actual executable name if different
+        name="overhead_cam_process",  # Optional: Name for your node
+        output="screen",  # Log output to the screen
+        parameters=[{"use_sim_time": True}]  # Add parameters if needed
+    )
+
+    inhandcampub = Node(
+        package="image_processing",  # Replace with the actual package name if different
+        executable="inhand_cam_process",  # Replace with the actual executable name if different
+        name="inhand_cam_process",  # Optional: Name for your node
+        output="screen",  # Log output to the screen
+        parameters=[{"use_sim_time": True}]  # Add parameters if needed
+    )
 
     hollow_dustbin_model_path = os.path.join(
         get_package_share_directory('conveyorbelt_gazebo'), # Replace with your dustbin package name
@@ -316,7 +330,7 @@ def generate_launch_description():
     spawn_hollow_dustbin_1 = Node(
         package='gazebo_ros',
         executable='spawn_entity.py',
-        arguments=['-entity', 'dustbin_1', '-file', hollow_dustbin_model_path, '-x', '0.50', '-y', '-0.2', '-z', '-0.4'],  # Position 1
+        arguments=['-entity', 'dustbin_1', '-file', hollow_dustbin_model_path, '-x', '0.50', '-y', '1.0', '-z', '-0.4'],  # Position 1
         output='screen'
     )
 
@@ -442,5 +456,7 @@ def generate_launch_description():
                 )
             ),
             # pandarobotmove,
+            overheadcampub,
+            inhandcampub,
         ]
     )
