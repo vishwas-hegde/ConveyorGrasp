@@ -13,7 +13,7 @@ from ament_index_python.packages import get_package_share_directory
 import os
 import yaml
 import tf2_ros
-
+from scipy.spatial.transform import Rotation as R
 
 class PandaCamNode(Node):
     def __init__(self):
@@ -93,7 +93,7 @@ class PandaCamNode(Node):
 
     def transform_to_matrix(self, quaternion):
         """Convert translation and quaternion to a 4x4 transformation matrix."""
-        from scipy.spatial.transform import Rotation as R
+        
 
         # Create a rotation matrix from quaternion
         rotation_matrix = R.from_quat(quaternion).as_matrix()
@@ -113,25 +113,74 @@ class PandaCamNode(Node):
             # R_c_w = np.array([[0, 0, 1],
             #                   [-0.001, 1, 0.001],
             #                   [1, 0, 0]])
-            R_c_w = np.array([[0, 1, 0],
-                               [-0.001, 0, -1.001],
-                               [-1, 0, 0]])
+            # R_c_w = np.array([[0, 1, 0],
+            #                    [-0.001, 0, -1.001],
+            #                    [-1, 0, 0]])
+            # try:
+            #     H_c_w = self.tf_buffer.lookup_transform(
+            #             'panda_camera_optical_link',  # Target frame
+            #             'panda_link0',  # Target frame
+            #              rclpy.time.Time(),
+            #             timeout=rclpy.time.Duration(seconds=5.0))
+            # except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
+            #     self.get_logger().error(f'TF Lookup Failed: {str(e)}')
+            #     return None
+            
+            # T_c_w = np.array([H_c_w.transform.translation.x, H_c_w.transform.translation.y, H_c_w.transform.translation.z])
+
+            # # Get depth value at the center
+            # depth_value = 0.34 - T_c_w[0] #box is at 34cm in world frame
+            # quaternion = [H_c_w.transform.rotation.x, H_c_w.transform.rotation.y, H_c_w.transform.rotation.z, H_c_w.transform.rotation.w]
+            # R_c_w = np.array(self.transform_to_matrix(quaternion))
+
+            try:
+                H_c_h = self.tf_buffer.lookup_transform(
+                        'world',  # Target frame
+                        'panda_hand',  # Source frame
+                        # 'panda_link0',  # Target frame
+                         rclpy.time.Time(),
+                        timeout=rclpy.time.Duration(seconds=5.0))
+            except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
+                self.get_logger().error(f'TF Lookup Failed: {str(e)}')
+                return None
+            quaternion = np.array([H_c_h.transform.rotation.x, H_c_h.transform.rotation.y, H_c_h.transform.rotation.z, H_c_h.transform.rotation.w])
+            R_c_h = np.array(self.transform_to_matrix(quaternion))
+            euler_degrees = R.from_quat(quaternion).as_euler('xyz', degrees=True)
+            # print("Euler Angles: ", euler_degrees)
+            self.rot_z = euler_degrees[2]
+            T_c_h = np.array([H_c_h.transform.translation.x - 0.04, H_c_h.transform.translation.y - 0.0, H_c_h.transform.translation.z - 0.04])
             try:
                 H_c_w = self.tf_buffer.lookup_transform(
+                        'world',  # Target frame
                         'panda_camera_optical_link',  # Target frame
-                        'panda_link0',  # Target frame
+                        # 'panda_link0',  # Target frame
                          rclpy.time.Time(),
                         timeout=rclpy.time.Duration(seconds=5.0))
             except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
                 self.get_logger().error(f'TF Lookup Failed: {str(e)}')
                 return None
             
+            # T_c_w = np.array([0.52, -0.03 , 0.5])
             T_c_w = np.array([H_c_w.transform.translation.x, H_c_w.transform.translation.y, H_c_w.transform.translation.z])
-
-            # Get depth value at the center
-            depth_value = 0.34 - T_c_w[0] #box is at 34cm in world frame
+            # print("T_c_w: ", T_c_w)
             quaternion = [H_c_w.transform.rotation.x, H_c_w.transform.rotation.y, H_c_w.transform.rotation.z, H_c_w.transform.rotation.w]
             R_c_w = np.array(self.transform_to_matrix(quaternion))
+            # Convert radians to degrees
+            
+            # print(quaternion)
+            # print("Transform Matrix: ", transform_matrix)
+            # print("R_c_w: ", R_c_w)
+            # print("R_c_h: ", R_c_h)
+
+            # FInal Rotation Matrix
+            # R_c_w = np.dot(R_c_h, R_c_w)
+            # print("R_c_w final: ", R_c_w)
+
+            # print("T_c_w: ", T_c_w)
+            # print("T_c_h: ", T_c_h)
+
+            # Get depth value at the center
+            depth_value = T_c_w[2] - 0.34 #box is at 34cm in world frame
             
 
             # Intrinsic parameters (update as per your camera)

@@ -230,6 +230,7 @@ class InHandCamNode(Node):
             # R_c_w = np.array([[0, 0, -1],
             #                    [0.00, -1, 0.00],
             #                    [-1, 0, 0]])
+            
             try:
                 H_c_h = self.tf_buffer.lookup_transform(
                         'world',  # Target frame
@@ -293,7 +294,9 @@ class InHandCamNode(Node):
             # print("Object Camera Coordinates:", x, y, z)
 
             P_camera = np.array([x, y, z])  # Point in camera frame
-            P_world = np.dot(R_c_w, P_camera) + T_c_h
+            P_world = np.dot(R_c_w, P_camera) + T_c_w
+            print(R_c_w)
+            print(T_c_w)
 
             self.object_world_coords = np.array([P_world[2], P_world[1], P_world[0]])
             object_coords_wrto_world = self.object_world_coords.tolist()
