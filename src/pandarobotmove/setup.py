@@ -21,6 +21,8 @@ setup(
     entry_points={
         'console_scripts': [ 'pandarobotmove = pandarobotmove.panda_pnp:main',
                             'pandarobotcloseloop = pandarobotmove.panda_closeloop:main',
+                            'pandarobotcloselooperror = pandarobotmove.panda_closeloop_error:main',
+                            'pandarobotcloseloopyolo = pandarobotmove.panda_closeloop_yolo:main',
         ],
     },
 )

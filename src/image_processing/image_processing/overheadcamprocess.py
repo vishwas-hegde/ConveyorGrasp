@@ -55,6 +55,8 @@ class OverHeadCamNode(Node):
 
         self.confidence_threshold = 0.75
 
+        self.annotated_frame_pub = self.create_publisher(Image, '/yolo/overhead_annotated', 10)
+
 
     def overhead_rgb_callback(self, msg):
         self.overhead_rgb = self.cv_bridge.imgmsg_to_cv2(msg, 'bgr8')
@@ -115,6 +117,13 @@ class OverHeadCamNode(Node):
             
         return object_coords_wrto_world
     
+    def calculate_angle(self, c1, c2):
+        """
+        Calculate the angle between two centers.
+        """
+        angle = np.arctan2(c2[1] - c1[1], c2[0] - c1[0])
+        # convert to degrees
+        return np.degrees(angle)
     
     def run(self):
         if self.overhead_rgb is not None:
@@ -156,27 +165,34 @@ class OverHeadCamNode(Node):
                     world_h = abs(world_y_max - world_y_min)
 
 
+                    angle = self.calculate_angle((world_x_min, world_y_min), (world_x_max, world_y_max))
                     cls = int(cls)
                     # cls_name = self.names[cls]
                     detection = {
                         "id": str(track_id),  # Assign unique ID for each object
                         "class": cls,
                         "bbox": [x_min, y_min, x_max, y_max],
-                        "info": {'center':(world_x, world_y), 'width': world_w, 'height': world_h, 'angle': 0},
+                        "info": {'center':(world_x, world_y), 'width': world_w, 'height': world_h, 'angle': angle},
                     }
                     detections["detections"].append(detection)
-                    self.tracked_objects.add(track_id)
+                    # self.tracked_objects.add(track_id)
                     self.prev_msg = detections
+            # self.publish_json(self.prev_msg)
+            # print(self.prev_msg)
 
-                else:
-                    if self.prev_msg is not None:
-                        # json_message = String()
-                        # json_message.data = json.dumps(self.prev_msg)
-                        self.publish_json(self.prev_msg)
+        # else:
+            if self.prev_msg is not None:
+                # json_message = String()
+                # json_message.data = json.dumps(self.prev_msg)
+                # print(self.prev_msg)
+                self.publish_json(self.prev_msg)
+            
 
             # Annotate and display the image
             annotated_frame = results[0].plot()
             self.annotated_frame = annotated_frame
+            annotated_frame_msg = self.cv_bridge.cv2_to_imgmsg(annotated_frame, 'bgr8')
+            self.annotated_frame_pub.publish(annotated_frame_msg)
             # cv2.imshow('YOLO Live Predictions', annotated_frame)
             # cv2.waitKey(1)
 

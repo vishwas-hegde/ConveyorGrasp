@@ -48,7 +48,7 @@ class CloseLoopRobot(Node):
         self.MoveXYZW_CLIENT = MoveXYZWclient()
         self.MoveXYZ_CLIENT = MoveXYZclient()
 
-        self.grasp_client = GraspClient()
+        # self.grasp_client = GraspClient()
 
         self.nodeLOG = rclpy.create_node('node_LOG')
 
@@ -211,7 +211,7 @@ class CloseLoopRobot(Node):
             # print("")
             # print("STEP NUMBER " + str(i) + " -> GripperClose (MoveG).")
 
-            GP = 0.012
+            GP = 0.01
             self.MoveG_CLIENT.send_goal(GP)
             
             while rclpy.ok():

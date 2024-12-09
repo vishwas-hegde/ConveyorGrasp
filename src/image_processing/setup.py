@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [ 'overhead_cam_process = image_processing.overheadcamprocess:main',
                             'inhand_cam_process = image_processing.inhandcamprocess:main',
+                            'inhand_cam_edge_process = image_processing.inhandcamprocessedge:main',
         ],
     },
 )

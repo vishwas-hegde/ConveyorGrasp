@@ -128,6 +128,21 @@ class InHandCamSub(Node):
     
     def get_object_data(self):
         return self.data
+    
+class InHandCamEdgeSub(Node):
+    def __init__(self):
+        super().__init__('inhand_cam_edge_subscriber')
+        self.subscription = self.create_subscription(String, 'object_center/inhand', self.listener_callback, 10)
+        self.subscription
+        self.data = None
+    
+    def listener_callback(self, msg):
+        data = msg.data
+        data_dict = json.loads(data)
+        self.data = data_dict
+    
+    def get_object_data(self):
+        return self.data
 
 class ConveyorPowerClient(Node):
     def __init__(self):
@@ -225,24 +240,14 @@ class RobotControlNode(Node):
         gripper_open = {'action': 'GripperOpen'}
         gripper_close = {'action': 'GripperClose'}
         generate_grasp = {'action': 'GenerateGrasp', 'value': {'grasp_type': 'generate_grasp_grconvnet'}}
-        action_format = {'action': 'MoveXYZW', 'value': {'positionx': 0.5, 'positiony': 0.05, 'positionz': 0.6, 'yaw': 45.00, 'pitch': 180.00, 'roll': 0.00}, 'speed': 1.0}
+        action_format = {'action': 'MoveXYZW', 'value': {'positionx': 0.5, 'positiony': 0.05, 'positionz': 0.6, 'yaw': 20.00, 'pitch': 180.00, 'roll': 0.00}, 'speed': 1.0}
 
         # Object data:
         object_data = {}
         object_id = -1
 
-        # conveyorpower = ConveyorPowerClient()
-        # provide power 3.0 to the conveyor belt
-        # conveyorpower.send_request(3.0)
-
-        # conveyorpower.destroy_node()
-
         while True:
 
-            # gs = node.control(generate_grasp)
-            # print(f"Recieved to loop")
-            # print(f"Grasp rectangle: {gs}")
-            # continue
             conveyorpower = ConveyorPowerClient()
             # provide power 3.0 to the conveyor belt
             conveyorpower.send_request(3.0)
@@ -263,21 +268,19 @@ class RobotControlNode(Node):
                 time.sleep(1)
                 continue
             # print(len(object_queue))
-            gs = node.control(generate_grasp)
+            # gs = node.control(generate_grasp)
             object = object_queue.popleft()
             # Add to completed list
             COMPLETED.append(object['id'])
-            action_format['value']['positionx'] = object['info']['center'][0]
+            action_format['value']['positionx'] = object['info']['center'][0] * 1.1
+            # action_format['value']['yaw'] = gs[4] + 90
 
             node.control(action_format)
             # time.sleep(5)
             print("STEP 3 Moved to object center")
             
             # 4. Pose Correction from In-hand camera
-            # grasp_rectangle = node.control(generate_grasp)
-            # Get object data from in-hand camera
-            x_center, y_center = gs[0], gs[1]
-            y_diff = object['info']['center'][1] - y_center
+            
             while rclpy.ok():
                 inhandcamnode = InHandCamSub()
                 rclpy.spin_once(inhandcamnode)
@@ -286,37 +289,38 @@ class RobotControlNode(Node):
                     inhandcamnode.destroy_node()
                     object_data = object_data['detections'][0]
                     center = object_data['info']['center']
-                    y_inhand = center[1] + y_diff
-                    if y_inhand - 0.05 > 0.01:
+                    print("HI")
+                    print(center)
+                    if -0.02 - center[1] > 0.01:
                         continue
                     conveyorpower = ConveyorPowerClient()
                     # provide power 0.0 to the conveyor belt
-                    conveyorpower.send_request(0.0)
+                    conveyorpower.send_request(1.0)
                     conveyorpower.destroy_node()
                     break
+                inhandcamnode.destroy_node()
             inhandcamnode.destroy_node()
-                # time.sleep(0.5)
-            # print(object_data)
-            # exit(0)
-            print(f"Conveyor stopped.")
+      
+            print(f"Conveyor slowed down.")
             # object_data = object_data['detections'][0]
             # center = object_data['info']['center']
-
-            action_format['value']['positionx'] = x_center
+            edge_data_node = InHandCamEdgeSub()
+            rclpy.spin_once(edge_data_node)
+            edge_data = edge_data_node.get_object_data()
+            # print(edge_data)
+            edge_data_node.destroy_node()
+            # print(float(edge_data['angle']))
+            anlge = float(edge_data['angle']) + 45.0
+            # print(float(edge_data['center'][0]))
+            action_format['value']['positionx'] = center[0]
+            # action_format['value']['positionx'] = float(edge_data['center'][0])
             action_format['value']['positiony'] = 0.05
+            action_format['value']['yaw'] = anlge
             
             # action_format['value']['yaw'] = 45.00
 
             node.control(action_format)
             print("STEP 4 Moved to object center")
-
-            # Wait for object to move under the gripper
-            # distance = abs(0.05 - center[1])
-            # timetowait = node.future_grasp(distance, velocity=0.03)
-            # print(f"Time to wait: {timetowait}")
-
-            # if timetowait - 1 > 0:
-            #     time.sleep(timetowait - 1)
 
             # 5. Move down to grasp the object:
             action_format['value']['positionz'] = 0.5
@@ -326,7 +330,7 @@ class RobotControlNode(Node):
             # 6. Attach the object:
             # object_id = int(object_center['id']) + 1
             object_id += 1
-            attach['value']['object'] = f"gelatin_box_{object_id}"
+            attach['value']['object'] = f"gelatin_box_1"
             node.control(attach)
 
             # 7. Close the gripper:

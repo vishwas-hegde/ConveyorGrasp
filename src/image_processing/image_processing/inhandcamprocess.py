@@ -39,6 +39,7 @@ class PandaCamNode(Node):
         # Publishers and subscriptions
         self.json_pub = self.create_publisher(String, "/yolo/inhand", 10)
         self.annotated_frame = None
+        self.annotated_frame_pub = self.create_publisher(Image, '/yolo/inhand_annotated', 10)
         self.timer = self.create_timer(0.5, self.run)
         self.get_logger().info("YOLO node with JSON publisher is up and running!")
 
@@ -54,7 +55,7 @@ class PandaCamNode(Node):
         self.panda_depth_sub = self.create_subscription(Image, '/panda_camera/depth/image_raw', self.panda_depth_callback, 10)
         self.prev_msg = None
 
-        self.confidence_threshold = 0.75
+        self.confidence_threshold = 0.2
 
         # Initialize TF2 buffer and listener
         self.tf_buffer = tf2_ros.Buffer()
@@ -81,16 +82,40 @@ class PandaCamNode(Node):
         Calculate the Euclidean distance between two centers.
         """
         return ((c1[0] - c2[0]) ** 2 + (c1[1] - c2[1]) ** 2) ** 0.5
+    
+    def calculate_angle(self, c1, c2):
+        """
+        Calculate the angle between two centers.
+        """
+        angle = np.arctan2(c2[1] - c1[1], c2[0] - c1[0])
+        # convert to degrees
+        return np.degrees(angle)
 
+    def transform_to_matrix(self, quaternion):
+        """Convert translation and quaternion to a 4x4 transformation matrix."""
+        from scipy.spatial.transform import Rotation as R
+
+        # Create a rotation matrix from quaternion
+        rotation_matrix = R.from_quat(quaternion).as_matrix()
+
+        # Construct the 4x4 transformation matrix
+        # transform_matrix = np.eye(4)
+        # transform_matrix[:3, :3] = rotation_matrix
+        # transform_matrix[:3, 3] = translation
+
+        return rotation_matrix
 
     def convert_to_world_coordinates(self, x, y):
         rgb_image = self.panda_rgb
         center = (x, y)
         if center is not None and rgb_image is not None:
 
-            R_c_w = np.array([[0, 0, 1],
-                              [-0.001, 1, 0.001],
-                              [1, 0, 0]])
+            # R_c_w = np.array([[0, 0, 1],
+            #                   [-0.001, 1, 0.001],
+            #                   [1, 0, 0]])
+            R_c_w = np.array([[0, 1, 0],
+                               [-0.001, 0, -1.001],
+                               [-1, 0, 0]])
             try:
                 H_c_w = self.tf_buffer.lookup_transform(
                         'panda_camera_optical_link',  # Target frame
@@ -105,7 +130,9 @@ class PandaCamNode(Node):
 
             # Get depth value at the center
             depth_value = 0.34 - T_c_w[0] #box is at 34cm in world frame
-
+            quaternion = [H_c_w.transform.rotation.x, H_c_w.transform.rotation.y, H_c_w.transform.rotation.z, H_c_w.transform.rotation.w]
+            R_c_w = np.array(self.transform_to_matrix(quaternion))
+            
 
             # Intrinsic parameters (update as per your camera)
             self.fx = 554.256  # Focal length in x
@@ -147,13 +174,14 @@ class PandaCamNode(Node):
             filtered_classes = [cls for cls, conf in zip(classes, confidences) if conf >= self.confidence_threshold]
 
             detections = {"detections": []}  # Initialize JSON structure
-
+            print("HI")
             for box, track_id, cls in zip(filtered_boxes, filtered_ids, filtered_classes):
-
-                if track_id is not None and track_id not in self.tracked_objects:
+                print("HI")
+                if track_id is not None:# and track_id not in self.tracked_objects:
                     # print(box)
                     x, y, w, h = map(float, box.tolist())
                     world_x, world_y, _ = self.convert_to_world_coordinates(x, y)
+                    print(world_x, world_y)
                     #get xmin, ymin, xmax, ymax
                     x_min = int(x - w / 2)
                     y_min = int(y - h / 2)
@@ -166,28 +194,30 @@ class PandaCamNode(Node):
                     world_w = abs(world_x_max - world_x_min)
                     world_h = abs(world_y_max - world_y_min)
 
-
+                    angle = self.calculate_angle((x_min, y_min), (x_max, y_max))
                     cls = int(cls)
                     # cls_name = self.names[cls]
                     detection = {
                         "id": str(track_id),  # Assign unique ID for each object
                         "class": cls,
                         "bbox": [x_min, y_min, x_max, y_max],
-                        "info": {'center':(world_x, world_y), 'width': world_w, 'height': world_h, 'angle': 0},
+                        "info": {'center':(world_x, world_y), 'width': world_w, 'height': world_h, 'angle': angle},
                     }
                     detections["detections"].append(detection)
-                    self.tracked_objects.add(track_id)
+                    # self.tracked_objects.add(track_id)
                     self.prev_msg = detections
+                    # self.publish_json(self.prev_msg)
 
-                else:
-                    if self.prev_msg is not None:
-                        # json_message = String()
-                        # json_message.data = json.dumps(self.prev_msg)
-                        self.publish_json(self.prev_msg)
+                # else:
+                if self.prev_msg is not None:
+                    # json_message = String()
+                    # json_message.data = json.dumps(self.prev_msg)
+                    self.publish_json(self.prev_msg)
 
             # Annotate and display the image
             annotated_frame = results[0].plot()
             self.annotated_frame = annotated_frame
+            self.annotated_frame_pub.publish(self.cv_bridge.cv2_to_imgmsg(annotated_frame, 'bgr8'))
             # cv2.imshow('YOLO Live Predictions', annotated_frame)
             # cv2.waitKey(1)
    

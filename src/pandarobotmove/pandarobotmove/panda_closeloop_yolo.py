@@ -279,7 +279,7 @@ class RobotControlNode(Node):
                     inhandcamnode.destroy_node()
                     object_data = object_data['detections'][0]
                     center = object_data['info']['center']
-                    if center[1] - 0.035 > 0.01:
+                    if -center[1] - 0.02 > 0.01:
                         continue
                     conveyorpower = ConveyorPowerClient()
                     # provide power 0.0 to the conveyor belt
@@ -287,6 +287,7 @@ class RobotControlNode(Node):
                     conveyorpower.destroy_node()
                     break
                 inhandcamnode.destroy_node()
+            inhandcamnode.destroy_node()
                 # time.sleep(0.5)
             # print(object_data)
             # exit(0)
@@ -318,7 +319,7 @@ class RobotControlNode(Node):
             # 6. Attach the object:
             # object_id = int(object_center['id']) + 1
             object_id += 1
-            attach['value']['object'] = f"gelatin_box_{object_id}"
+            attach['value']['object'] = f"gelatin_box_1"
             node.control(attach)
 
             # 7. Close the gripper:
