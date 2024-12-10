@@ -21,6 +21,10 @@ ros2 service call /generate_grasp grasp_gen_interface/srv/GraspGen "{input: '{\"
 ```
 ### For cluttered objects:
 ```bash
+ros2 run grasp_gen_service grasp_gen_service_clutter 
+```
+#### open a new terminal
+```bash
 ros2 service call /generate_grasp grasp_gen_interface/srv/GraspGen "{input: '{\"grasp_type\": \"generate_grasp_grconvnet\", \"crop\": [230, 191, 391, 262], \"id\": _insert_id_no_}'}"
 ```
 
