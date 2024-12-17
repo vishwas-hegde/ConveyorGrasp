@@ -1,5 +1,5 @@
 # ConveyorGrasp
-A simulation to Detect, Track, Synthesize Grasp and execute grasp for objects on a moving conveyor belt.
+A Gazebo simulation to Detect, Track, Synthesize and Execute grasp for objects on a moving conveyor belt using ROS2 Humble.
 
 ## Workflow Steps
 
