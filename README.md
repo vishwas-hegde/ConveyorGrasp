@@ -23,3 +23,5 @@ ros2 service call /CONVEYORPOWER conveyorbelt_msgs/srv/ConveyorBeltControl "{pow
 
 ![Demo Video](https://github.com/vishwas-hegde/ConveyorGrasp/blob/main/videos/error_corrction_gif.gif)
 
+![](https://github.com/vishwas-hegde/ConveyorGrasp/blob/main/videos/clutter_grasp-gif.webm)
+
