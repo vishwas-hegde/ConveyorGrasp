@@ -21,7 +21,9 @@ ros2 run ros2_grasping spawn_ycb.py --x 0.5 --y -0.7  --name "gelatin_box"
 ros2 service call /CONVEYORPOWER conveyorbelt_msgs/srv/ConveyorBeltControl "{power: 2.5}"
 ```
 
-![Demo Video](https://github.com/vishwas-hegde/ConveyorGrasp/blob/main/videos/error_corrction_gif.gif)
+## Error Correction with In-hand camera
+![](https://github.com/vishwas-hegde/ConveyorGrasp/blob/main/videos/error_corrction_gif.gif)
 
+## Grasping in Cluttered Environment
 ![](https://github.com/vishwas-hegde/ConveyorGrasp/blob/main/videos/clutter_grasp-giff.gif)
 
